@@ -22,18 +22,27 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.location.Location;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class Seismic extends Activity {
     
+	static final private int QUAKE_DIALOG = 1;
     ListView seismicListView;
 	ArrayList<Quake> earthquakes = new ArrayList<Quake>();
 	ArrayAdapter<Quake> aa;
+	Quake selectedQuake;
 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -41,6 +50,14 @@ public class Seismic extends Activity {
         setContentView(R.layout.main);
         
         seismicListView = (ListView)this.findViewById(R.id.seismicListView);
+        
+        seismicListView.setOnItemClickListener(new OnItemClickListener() {
+        	@Override
+        	public void onItemClick(AdapterView<?> _av, View _v, int _index, long arg3) {
+        		selectedQuake = earthquakes.get(_index);
+        		showDialog(QUAKE_DIALOG);
+        	}
+        });
         
         int layoutID = android.R.layout.simple_list_item_1;
         aa = new ArrayAdapter<Quake>(this, layoutID, earthquakes);
@@ -71,6 +88,42 @@ public class Seismic extends Activity {
 		}
 		}
 		return false;
+	}
+	
+	@Override
+	public Dialog onCreateDialog(int id) {
+		switch(id) {
+		case (QUAKE_DIALOG): {
+			LayoutInflater li = LayoutInflater.from(this);
+			View quakeDetailsView = li.inflate(R.layout.quake_details, null);
+			
+			AlertDialog.Builder quakeDialog = new AlertDialog.Builder(this);
+			quakeDialog.setTitle("Quake Time");
+			quakeDialog.setView(quakeDetailsView);
+			return quakeDialog.create();
+		}
+		}
+		return null;
+	}
+	
+	@Override
+	public void onPrepareDialog(int id, Dialog dialog) {
+		switch (id) {
+		case (QUAKE_DIALOG): {
+			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+			String dateString = sdf.format(selectedQuake.getDate());
+			String quakeText = "Magnitude " +selectedQuake.getMagnitude() +
+								"\n" + selectedQuake.getDetails() + "\n" +
+								selectedQuake.getLink();
+			
+			AlertDialog quakeDialog = (AlertDialog)dialog;
+			quakeDialog.setTitle(dateString);
+			TextView tv = (TextView)quakeDialog.findViewById(R.id.quakeDetailsTextView);
+			tv.setText(quakeText);
+			
+			break;
+		}
+		}
 	}
 	
 	private void refreshEarthquakes() {
