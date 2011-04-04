@@ -120,8 +120,6 @@ public class Seismic extends Activity {
 			quakeDialog.setTitle(dateString);
 			TextView tv = (TextView)quakeDialog.findViewById(R.id.quakeDetailsTextView);
 			tv.setText(quakeText);
-			
-			break;
 		}
 		}
 	}
@@ -163,8 +161,7 @@ public class Seismic extends Activity {
 						Element link = (Element)entry.getElementsByTagName("link").item(0);
 						
 						String details = title.getFirstChild().getNodeValue();
-						String hostname = "http://earthquake.usgs.gov";
-						String linkString = hostname + link.getAttribute("href");
+						String linkString = link.getAttribute("href");
 						
 						String point = g.getFirstChild().getNodeValue();
 						String dt = when.getFirstChild().getNodeValue();
