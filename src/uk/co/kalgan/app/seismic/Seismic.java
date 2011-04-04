@@ -24,6 +24,8 @@ import org.xml.sax.SAXException;
 import android.app.Activity;
 import android.location.Location;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -46,6 +48,30 @@ public class Seismic extends Activity {
         
         refreshEarthquakes();
     }
+	
+	static final private int MENU_UPDATE = Menu.FIRST;
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+		
+		menu.add(0, MENU_UPDATE, Menu.NONE, R.string.menu_update);
+		
+		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		super.onOptionsItemSelected(item);
+		
+		switch (item.getItemId()) {
+		case (MENU_UPDATE): {
+			refreshEarthquakes();
+			return true;
+		}
+		}
+		return false;
+	}
 	
 	private void refreshEarthquakes() {
 		// Get URL
