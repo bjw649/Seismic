@@ -27,7 +27,6 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -97,8 +96,9 @@ public class Seismic extends Activity {
 			return true;
 		}
 		case (MENU_PREFERENCES): {
-			Intent i = new Intent(this, Preferences.class);
+			Intent i = new Intent(this, UserPreferences.class);
 			startActivityForResult(i, SHOW_PREFERENCES);
+			return true;
 		}
 		}
 		return false;
@@ -146,6 +146,8 @@ public class Seismic extends Activity {
 			quakeDialog.setTitle(dateString);
 			TextView tv = (TextView)quakeDialog.findViewById(R.id.quakeDetailsTextView);
 			tv.setText(quakeText);
+			
+			break;
 		}
 		}
 	}
@@ -245,21 +247,10 @@ public class Seismic extends Activity {
 		Context context = getApplicationContext();
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		
-		int minMagIndex = prefs.getInt(Preferences.PREF_MIN_MAG, 0);
-		if (minMagIndex < 0) minMagIndex = 0;
+		minimumMagnitude = Integer.parseInt(prefs.getString(UserPreferences.PREF_MIN_MAG, "0"));
+				
+		updateFreq = Integer.parseInt(prefs.getString(UserPreferences.PREF_UPDATE_FREQ, "0"));
 		
-		int freqIndex = prefs.getInt(Preferences.PREF_UPDATE_FREQ, 0);
-		if (freqIndex < 0) freqIndex = 0;
-		
-		autoUpdate = prefs.getBoolean(Preferences.PREF_AUTO_UPDATE, false);
-		
-		Resources r = getResources();
-		// Get the vales from arrays
-		int[] minMagValues = r.getIntArray(R.array.magnitude_values);
-		int[] freqValues = r.getIntArray(R.array.update_freq_values);
-		
-		// Convert values to int's
-		minimumMagnitude = minMagValues[minMagIndex];
-		updateFreq = freqValues[freqIndex];
+		autoUpdate = prefs.getBoolean(UserPreferences.PREF_AUTO_UPDATE, false);
 	}
 }

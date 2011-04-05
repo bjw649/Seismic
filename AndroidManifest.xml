@@ -14,7 +14,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Preferences"
+        <activity android:name=".UserPreferences"
         		  android:label="Seismic Preferences">
 		</activity>
     </application>
