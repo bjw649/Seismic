@@ -24,6 +24,7 @@ import org.xml.sax.SAXException;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -67,15 +68,19 @@ public class Seismic extends Activity {
     }
 	
 	static final private int MENU_UPDATE = Menu.FIRST;
-	
+	static final private int MENU_PREFERENCES = Menu.FIRST+1;
+		
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
 		
 		menu.add(0, MENU_UPDATE, Menu.NONE, R.string.menu_update);
+		menu.add(0, MENU_PREFERENCES, Menu.NONE, R.string.menu_preferences);
 		
 		return true;
 	}
+	
+	private static final int SHOW_PREFERENCES = 1;
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -85,6 +90,10 @@ public class Seismic extends Activity {
 		case (MENU_UPDATE): {
 			refreshEarthquakes();
 			return true;
+		}
+		case (MENU_PREFERENCES): {
+			Intent i = new Intent(this, Preferences.class);
+			startActivityForResult(i, SHOW_PREFERENCES);
 		}
 		}
 		return false;
