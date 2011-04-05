@@ -1,5 +1,6 @@
 package uk.co.kalgan.app.seismic;
 
+import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
@@ -16,6 +17,7 @@ public class UserPreferences extends PreferenceActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.userpreferences);
+		setResult(Activity.RESULT_OK);
 	}
 	
 }

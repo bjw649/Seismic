@@ -16,7 +16,7 @@
     	android:summary="Frequency at which to update earthquake list"
    	/>
     <ListPreference
-    	android:key="PREF_MAG_MAG"
+    	android:key="PREF_MIN_MAG"
     	android:title="Minimum magnitude"
     	android:entries="@array/magnitude_options"
     	android:entryValues="@array/magnitude_values"

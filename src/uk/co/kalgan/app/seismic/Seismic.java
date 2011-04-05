@@ -92,6 +92,7 @@ public class Seismic extends Activity {
 		
 		switch (item.getItemId()) {
 		case (MENU_UPDATE): {
+			updateFromPreferences();
 			refreshEarthquakes();
 			return true;
 		}
@@ -233,7 +234,7 @@ public class Seismic extends Activity {
 	}
 	
 	private void addNewQuake(Quake _quake) {
-		if (_quake.getMagnitude() > minimumMagnitude) {
+		if (_quake.getMagnitude() >= minimumMagnitude) {
 			earthquakes.add(_quake);
 			aa.notifyDataSetChanged();
 		}
