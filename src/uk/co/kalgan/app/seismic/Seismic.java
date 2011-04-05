@@ -24,9 +24,13 @@ import org.xml.sax.SAXException;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.location.Location;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -64,6 +68,7 @@ public class Seismic extends Activity {
         aa = new ArrayAdapter<Quake>(this, layoutID, earthquakes);
         seismicListView.setAdapter(aa);
         
+        updateFromPreferences();
         refreshEarthquakes();
     }
 	
@@ -97,6 +102,18 @@ public class Seismic extends Activity {
 		}
 		}
 		return false;
+	}
+	
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		
+		if (requestCode == SHOW_PREFERENCES) {
+			if (resultCode == Activity.RESULT_OK) {
+				updateFromPreferences();
+				refreshEarthquakes();
+			}
+		}
 	}
 	
 	@Override
@@ -214,7 +231,35 @@ public class Seismic extends Activity {
 	}
 	
 	private void addNewQuake(Quake _quake) {
-		earthquakes.add(_quake);
-		aa.notifyDataSetChanged();
+		if (_quake.getMagnitude() > minimumMagnitude) {
+			earthquakes.add(_quake);
+			aa.notifyDataSetChanged();
+		}
+	}
+	
+	int minimumMagnitude = 0;
+	boolean autoUpdate = false;
+	int updateFreq = 0;
+	
+	private void updateFromPreferences() {
+		Context context = getApplicationContext();
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+		
+		int minMagIndex = prefs.getInt(Preferences.PREF_MIN_MAG, 0);
+		if (minMagIndex < 0) minMagIndex = 0;
+		
+		int freqIndex = prefs.getInt(Preferences.PREF_UPDATE_FREQ, 0);
+		if (freqIndex < 0) freqIndex = 0;
+		
+		autoUpdate = prefs.getBoolean(Preferences.PREF_AUTO_UPDATE, false);
+		
+		Resources r = getResources();
+		// Get the vales from arrays
+		int[] minMagValues = r.getIntArray(R.array.magnitude_values);
+		int[] freqValues = r.getIntArray(R.array.update_freq_values);
+		
+		// Convert values to int's
+		minimumMagnitude = minMagValues[minMagIndex];
+		updateFreq = freqValues[freqIndex];
 	}
 }
