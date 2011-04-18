@@ -15,7 +15,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".UserPreferences"
-        		  android:label="Seismic Preferences">
-		</activity>
+        		  android:label="Seismic Preferences" />
+        <provider android:name=".SeismicProvider"
+                  android:authorities="uk.co.kalgan.provider.seismic" />
     </application>
 </manifest>
