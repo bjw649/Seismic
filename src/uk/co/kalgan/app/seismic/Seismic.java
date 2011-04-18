@@ -24,9 +24,12 @@ import org.xml.sax.SAXException;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -66,6 +69,8 @@ public class Seismic extends Activity {
         int layoutID = android.R.layout.simple_list_item_1;
         aa = new ArrayAdapter<Quake>(this, layoutID, earthquakes);
         seismicListView.setAdapter(aa);
+        
+        loadQuakesfromProvider();
         
         updateFromPreferences();
         refreshEarthquakes();
@@ -178,6 +183,7 @@ public class Seismic extends Activity {
 				
 				// Clear old Earthquakes
 				earthquakes.clear();
+				loadQuakesfromProvider();
 				
 				// Get a list of each earthquake entry
 				NodeList nl = docEle.getElementsByTagName("entry");
@@ -229,14 +235,69 @@ public class Seismic extends Activity {
 		} catch (SAXException e) {
 			e.printStackTrace();
 		} finally {
-			
 		}
 	}
 	
 	private void addNewQuake(Quake _quake) {
+		ContentResolver cr = getContentResolver();
+		
+		// Construct a where clause to make sure we don't have this earthquake
+		String w = SeismicProvider.KEY_DATE + " = " + _quake.getDate().getTime();
+		
+		// If earthquake is new, insert it into the provider
+		if (cr.query(SeismicProvider.CONTENT_URI, null, w, null, null).getCount() == 0) {
+			ContentValues values = new ContentValues();
+			
+			values.put(SeismicProvider.KEY_DATE, _quake.getDate().getTime());
+			values.put(SeismicProvider.KEY_DETAILS, _quake.getDetails());
+			
+			double lat = _quake.getLocation().getLatitude();
+			double lon = _quake.getLocation().getLongitude();
+			values.put(SeismicProvider.KEY_LOCATION_LAT, lat);
+			values.put(SeismicProvider.KEY_LOCATION_LON, lon);
+			values.put(SeismicProvider.KEY_LINK, _quake.getLink());
+			values.put(SeismicProvider.KEY_MAGNITUDE, _quake.getMagnitude());
+			
+			cr.insert(SeismicProvider.CONTENT_URI, values);
+			earthquakes.add(_quake);
+			
+			addQuakeToArray(_quake);
+		}
+	}
+	
+	private void addQuakeToArray(Quake _quake) {
 		if (_quake.getMagnitude() >= minimumMagnitude) {
 			earthquakes.add(_quake);
 			aa.notifyDataSetChanged();
+		}
+	}
+	
+	private void loadQuakesfromProvider() {
+		earthquakes.clear();
+		
+		ContentResolver cr = getContentResolver();
+		
+		// Return all saved quakes
+		Cursor c = cr.query(SeismicProvider.CONTENT_URI, null, null, null, null);
+		if (c.moveToFirst()) {
+			do {
+				// Extract details
+				Long datems = c.getLong(SeismicProvider.DATE_COLUMN);
+				String details = c.getString(SeismicProvider.DETAILS_COLUMN);
+				Float lat = c.getFloat(SeismicProvider.LATITUDE_COLUMN);
+				Float lon = c.getFloat(SeismicProvider.LONGITUDE_COLUMN);
+				Double mag = c.getDouble(SeismicProvider.MAGNITUDE_COLUMN);
+				String link = c.getString(SeismicProvider.LINK_COLUMN);
+				
+				Location location = new Location("dummy");
+				location.setLatitude(lat);
+				location.setLongitude(lon);
+				
+				Date date = new Date(datems);
+				
+				Quake q = new Quake(date, details, location, mag, link);
+				addQuakeToArray(q);
+			} while (c.moveToNext());
 		}
 	}
 	

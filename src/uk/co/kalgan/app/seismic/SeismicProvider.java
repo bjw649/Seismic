@@ -176,7 +176,7 @@ public class SeismicProvider extends ContentProvider {
 		// if the cursor result set changes
 		c.setNotificationUri(getContext().getContentResolver(), _uri);
 		
-		return null;
+		return c;
 	}
 
 	@Override
