@@ -1,5 +1,10 @@
 package uk.co.kalgan.app.seismic;
 
+import uk.co.kalgan.app.seismic.Seismic.SeismicReceiver;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,6 +15,7 @@ import com.google.android.maps.MapView;
 public class SeismicMap extends MapActivity {
 	
 	Cursor earthquakeCursor;
+	SeismicReceiver receiver;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) { 
@@ -27,12 +33,19 @@ public class SeismicMap extends MapActivity {
 	@Override
 	public void onResume() {
 		earthquakeCursor.requery();
+		
+		IntentFilter filter;
+		filter = new IntentFilter(SeismicService.NEW_EARTHQUAKE_FOUND);
+		receiver = new SeismicReceiver();
+		registerReceiver(receiver, filter);
+				
 		super.onResume();
 	}
 	
 	@Override
 	public void onPause() {
 		earthquakeCursor.deactivate();
+		unregisterReceiver(receiver);
 		super.onPause();
 	}
 	
@@ -47,4 +60,12 @@ public class SeismicMap extends MapActivity {
 		return false;
 	}
 
+	public class SeismicReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context _context, Intent _intent) {
+			earthquakeCursor.requery();
+			MapView earthquakeMap = (MapView)findViewById(R.id.map_view);
+			earthquakeMap.invalidate();
+		}
+	}
 }
