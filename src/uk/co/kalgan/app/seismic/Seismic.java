@@ -78,6 +78,7 @@ public class Seismic extends Activity {
 	
 	static final private int MENU_UPDATE = Menu.FIRST;
 	static final private int MENU_PREFERENCES = Menu.FIRST+1;
+	static final private int MENU_EARTHQUAKE_MAP = Menu.FIRST+2;
 		
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -86,6 +87,10 @@ public class Seismic extends Activity {
 		menu.add(0, MENU_UPDATE, Menu.NONE, R.string.menu_update);
 		menu.add(0, MENU_PREFERENCES, Menu.NONE, R.string.menu_preferences);
 		
+		Intent startMap = new Intent(this, SeismicMap.class);
+		menu.add(0, MENU_EARTHQUAKE_MAP, Menu.NONE,
+				R.string.menu_earthquake_map).setIntent(startMap);
+				
 		return true;
 	}
 	
