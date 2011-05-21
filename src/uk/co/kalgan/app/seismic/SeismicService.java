@@ -22,6 +22,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -36,13 +37,15 @@ import android.database.Cursor;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
 public class SeismicService extends Service {
 	
-	private Timer updateTimer;
 	private float minimumMagnitude;
+	AlarmManager alarms;
+	PendingIntent alarmIntent;
 	
 	private Notification newEarthquakeNotification;
 	public static final int NOTIFICATION_ID = 1;
@@ -69,33 +72,32 @@ public class SeismicService extends Service {
 		minimumMagnitude = minMagValues[minMagIndex];
 		int updateFreq = freqValues[freqIndex];
 		
-		updateTimer.cancel();
 		if (autoUpdate) {
-			updateTimer = new Timer("earthquakesUpdates");
-			updateTimer.scheduleAtFixedRate(doRefresh, 0, updateFreq*60*1000);
+			int alarmType = AlarmManager.ELAPSED_REALTIME_WAKEUP;
+			long timeToRefresh = SystemClock.elapsedRealtime() + updateFreq*60*1000;
+			alarms.setRepeating(alarmType, timeToRefresh, updateFreq*60*1000, alarmIntent);
 		} else
-			refreshEarthquakes();
+			alarms.cancel(alarmIntent);
 		
-		return Service.START_STICKY;
+		refreshEarthquakes();
+		
+		return Service.START_NOT_STICKY;
 	}
-	
-	private TimerTask doRefresh = new TimerTask() {
 		
-		@Override
-		public void run() {
-			refreshEarthquakes();
-		}
-	};
-	
 	@Override
 	public void onCreate() {
-		updateTimer = new Timer("earthquakesUpdate");
-		
 		int icon = R.drawable.icon;
 		String tickerText = "New Earthquake Detected";
 		long when = System.currentTimeMillis();
 		
 		newEarthquakeNotification = new Notification(icon, tickerText, when);
+		
+		alarms = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+		
+		String ALARM_ACTION;
+		ALARM_ACTION = SeismicAlarmReceiver.ACTION_REFRESH_EARTHQUAKE_ALARM;
+		Intent intentToFire = new Intent(ALARM_ACTION);
+		alarmIntent = PendingIntent.getBroadcast(this, 0, intentToFire, 0);
 	}
 
 	@Override
@@ -255,7 +257,7 @@ public class SeismicService extends Service {
 		
 		@Override
 		protected void onPostExecute(Void _result) {
-			super.onPostExecute(_result);
+			stopSelf();
 		}
 	}
 }

@@ -23,5 +23,10 @@
                   android:authorities="uk.co.kalgan.provider.seismic" />
         <service  android:name=".SeismicService"
         		  android:enabled="true" />
+       	<receiver android:name=".SeismicAlarmReceiver">
+       		<intent-filter>
+       			<action android:name="uk.co.kalgan.seismic.ACTION_REFRESH_EARTHQUAKE_ALARM" />
+       		</intent-filter>
+       	</receiver>
     </application>
 </manifest>
