@@ -31,6 +31,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 
@@ -89,79 +90,13 @@ public class SeismicService extends Service {
 		return null;
 	}
 
+	SeismicLookupTask lastLookup = null;
+	
 	private void refreshEarthquakes() {
-		// Get URL
-		URL url;
-		try {
-			String quakeFeed = getString(R.string.quake_feed);
-			url = new URL(quakeFeed);
-			
-			URLConnection connection;
-			connection = url.openConnection();
-			
-			HttpURLConnection httpConnection = (HttpURLConnection)connection;
-			int responseCode = httpConnection.getResponseCode();
-			
-			if (responseCode == HttpURLConnection.HTTP_OK) {
-				InputStream in = httpConnection.getInputStream();
-				
-				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-				DocumentBuilder db = dbf.newDocumentBuilder();
-				
-				// Parse feed
-				Document dom = db.parse(in);
-				Element docEle = dom.getDocumentElement();
-				
-				// Get a list of each earthquake entry
-				NodeList nl = docEle.getElementsByTagName("entry");
-				if (nl != null && nl.getLength() >0) {
-					for (int i = 0; i < nl.getLength(); i++) {
-						Element entry = (Element)nl.item(i);
-						Element title = (Element)entry.getElementsByTagName("title").item(0);
-						Element g = (Element)entry.getElementsByTagName("georss:point").item(0);
-						Element when = (Element)entry.getElementsByTagName("updated").item(0);
-						Element link = (Element)entry.getElementsByTagName("link").item(0);
-						
-						String details = title.getFirstChild().getNodeValue();
-						String linkString = link.getAttribute("href");
-						
-						String point = g.getFirstChild().getNodeValue();
-						String dt = when.getFirstChild().getNodeValue();
-						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
-						Date qDate = new GregorianCalendar(0,0,0).getTime();
-						try {
-							qDate = sdf.parse(dt);
-						} catch (ParseException e) {
-							e.printStackTrace();
-						}
-						
-						String[] location = point.split(" ");
-						Location l = new Location("dummyGPS");
-						l.setLatitude(Double.parseDouble(location[0]));
-						l.setLongitude(Double.parseDouble(location[1]));
-						
-						String magnitudeString = details.split(" ")[1];
-						int end = magnitudeString.length()-1;
-						double magnatude = Double.parseDouble(magnitudeString.substring(0, end));
-						
-						details = details.split(",")[1].trim();
-						
-						Quake quake = new Quake(qDate, details, l, magnatude, linkString);
-						
-						// Process a newly found quake
-						addNewQuake(quake);
-					}
-				}
-			}
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} finally {
+		if (lastLookup == null ||
+				lastLookup.getStatus().equals(AsyncTask.Status.FINISHED)) {
+			lastLookup = new SeismicLookupTask();
+			lastLookup.execute((Void[])null);
 		}
 	}
 	
@@ -202,5 +137,98 @@ public class SeismicService extends Service {
 		intent.putExtra("magnitude", _quake.getMagnitude());
 		
 		sendBroadcast(intent);
+	}
+	
+	public class SeismicLookupTask extends AsyncTask<Void, Quake, Void> {
+
+		@Override
+		protected Void doInBackground(Void... _params) {
+			// Get URL
+			URL url;
+			try {
+				String quakeFeed = getString(R.string.quake_feed);
+				url = new URL(quakeFeed);
+				
+				URLConnection connection;
+				connection = url.openConnection();
+				
+				HttpURLConnection httpConnection = (HttpURLConnection)connection;
+				int responseCode = httpConnection.getResponseCode();
+				
+				if (responseCode == HttpURLConnection.HTTP_OK) {
+					InputStream in = httpConnection.getInputStream();
+					
+					DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+					DocumentBuilder db = dbf.newDocumentBuilder();
+					
+					// Parse feed
+					Document dom = db.parse(in);
+					Element docEle = dom.getDocumentElement();
+					
+					// Get a list of each earthquake entry
+					NodeList nl = docEle.getElementsByTagName("entry");
+					if (nl != null && nl.getLength() >0) {
+						for (int i = 0; i < nl.getLength(); i++) {
+							Element entry = (Element)nl.item(i);
+							Element title = (Element)entry.getElementsByTagName("title").item(0);
+							Element g = (Element)entry.getElementsByTagName("georss:point").item(0);
+							Element when = (Element)entry.getElementsByTagName("updated").item(0);
+							Element link = (Element)entry.getElementsByTagName("link").item(0);
+							
+							String details = title.getFirstChild().getNodeValue();
+							String linkString = link.getAttribute("href");
+							
+							String point = g.getFirstChild().getNodeValue();
+							String dt = when.getFirstChild().getNodeValue();
+							SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
+							Date qDate = new GregorianCalendar(0,0,0).getTime();
+							try {
+								qDate = sdf.parse(dt);
+							} catch (ParseException e) {
+								e.printStackTrace();
+							}
+							
+							String[] location = point.split(" ");
+							Location l = new Location("dummyGPS");
+							l.setLatitude(Double.parseDouble(location[0]));
+							l.setLongitude(Double.parseDouble(location[1]));
+							
+							String magnitudeString = details.split(" ")[1];
+							int end = magnitudeString.length()-1;
+							double magnatude = Double.parseDouble(magnitudeString.substring(0, end));
+							
+							details = details.split(",")[1].trim();
+							
+							Quake quake = new Quake(qDate, details, l, magnatude, linkString);
+							
+							// Process a newly found quake
+							addNewQuake(quake);
+							publishProgress(quake);
+						}
+					}
+				}
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (ParserConfigurationException e) {
+				e.printStackTrace();
+			} catch (SAXException e) {
+				e.printStackTrace();
+			} finally {
+			}
+			
+			return null;
+		}
+		
+		@Override
+		protected void onProgressUpdate(Quake... _quakes ) {
+			super.onProgressUpdate(_quakes);
+		}
+		
+		@Override
+		protected void onPostExecute(Void _result) {
+			super.onPostExecute(_result);
+		}
 	}
 }

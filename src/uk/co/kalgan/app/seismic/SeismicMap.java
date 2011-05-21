@@ -1,6 +1,5 @@
 package uk.co.kalgan.app.seismic;
 
-import uk.co.kalgan.app.seismic.Seismic.SeismicReceiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
