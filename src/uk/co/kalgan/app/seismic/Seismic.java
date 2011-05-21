@@ -6,6 +6,7 @@ import java.util.Date;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -34,6 +35,7 @@ public class Seismic extends Activity {
 	ArrayAdapter<Quake> aa;
 	Quake selectedQuake;
 	SeismicReceiver receiver;
+	NotificationManager notificationManager;
 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -58,10 +60,15 @@ public class Seismic extends Activity {
         
         updateFromPreferences();
         refreshEarthquakes();
+        
+        String svcName = Context.NOTIFICATION_SERVICE;
+        notificationManager = (NotificationManager)getSystemService(svcName);
     }
 	
 	@Override
 	public void onResume() {
+		notificationManager.cancel(SeismicService.NOTIFICATION_ID);
+		
 		IntentFilter filter;
 		filter = new IntentFilter(SeismicService.NEW_EARTHQUAKE_FOUND);
 		receiver = new SeismicReceiver();
@@ -223,6 +230,8 @@ public class Seismic extends Activity {
 		@Override
 		public void onReceive(Context _context, Intent _intent) {
 			loadQuakesfromProvider();
+			
+			notificationManager.cancel(SeismicService.NOTIFICATION_ID);
 		}
 	}
 }

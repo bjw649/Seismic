@@ -22,6 +22,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -34,11 +37,15 @@ import android.location.Location;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.widget.Toast;
 
 public class SeismicService extends Service {
 	
 	private Timer updateTimer;
 	private float minimumMagnitude;
+	
+	private Notification newEarthquakeNotification;
+	public static final int NOTIFICATION_ID = 1;
 	
 	public static final String NEW_EARTHQUAKE_FOUND = "New_Earthquake_Found";
 	
@@ -83,6 +90,12 @@ public class SeismicService extends Service {
 	@Override
 	public void onCreate() {
 		updateTimer = new Timer("earthquakesUpdate");
+		
+		int icon = R.drawable.icon;
+		String tickerText = "New Earthquake Detected";
+		long when = System.currentTimeMillis();
+		
+		newEarthquakeNotification = new Notification(icon, tickerText, when);
 	}
 
 	@Override
@@ -223,7 +236,21 @@ public class SeismicService extends Service {
 		
 		@Override
 		protected void onProgressUpdate(Quake... _quakes ) {
-			super.onProgressUpdate(_quakes);
+			String svcName = Context.NOTIFICATION_SERVICE;
+			NotificationManager notificationManager = (NotificationManager)getSystemService(svcName);
+			
+			Context context = getApplicationContext();
+			String expandedText = _quakes[0].getDate().toString();
+			String expandedTitle = "M:" + _quakes[0].getMagnitude() + " " + _quakes[0].getDetails();
+			
+			Intent startActivityIntent = new Intent(SeismicService.this, Seismic.class);
+			PendingIntent launchIntent = PendingIntent.getActivity(context, 0, startActivityIntent, 0);
+			
+			newEarthquakeNotification.setLatestEventInfo(context, expandedText, expandedTitle, launchIntent);
+			newEarthquakeNotification.when = java.lang.System.currentTimeMillis();
+			
+			notificationManager.notify(NOTIFICATION_ID, newEarthquakeNotification);
+			Toast.makeText(context, expandedText, Toast.LENGTH_SHORT).show();
 		}
 		
 		@Override

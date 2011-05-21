@@ -1,5 +1,6 @@
 package uk.co.kalgan.app.seismic;
 
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +16,7 @@ public class SeismicMap extends MapActivity {
 	
 	Cursor earthquakeCursor;
 	SeismicReceiver receiver;
+	NotificationManager notificationManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) { 
@@ -27,10 +29,15 @@ public class SeismicMap extends MapActivity {
 		MapView earthquakeMap = (MapView)findViewById(R.id.map_view);
 		SeismicOverlay so = new SeismicOverlay(earthquakeCursor);
 		earthquakeMap.getOverlays().add(so);
+		
+		String svcName = Context.NOTIFICATION_SERVICE;
+		notificationManager = (NotificationManager)getSystemService(svcName);
 	}
 	
 	@Override
 	public void onResume() {
+		notificationManager.cancel(SeismicService.NOTIFICATION_ID);
+		
 		earthquakeCursor.requery();
 		
 		IntentFilter filter;
@@ -62,6 +69,8 @@ public class SeismicMap extends MapActivity {
 	public class SeismicReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context _context, Intent _intent) {
+			notificationManager.cancel(SeismicService.NOTIFICATION_ID);
+			
 			earthquakeCursor.requery();
 			MapView earthquakeMap = (MapView)findViewById(R.id.map_view);
 			earthquakeMap.invalidate();
