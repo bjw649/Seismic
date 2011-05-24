@@ -29,7 +29,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.location.Location;
 import android.os.AsyncTask;
@@ -55,21 +54,14 @@ public class SeismicService extends Service {
 		Context context = getApplicationContext();
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		
-		int minMagIndex = prefs.getInt(UserPreferences.PREF_MIN_MAG, 0);
-		if (minMagIndex < 0) minMagIndex = 0;
+		minimumMagnitude = Integer.parseInt(prefs.getString(UserPreferences.PREF_MIN_MAG, "0"));
+		if (minimumMagnitude < 0) minimumMagnitude = 0;
 		
-		int freqIndex = prefs.getInt(UserPreferences.PREF_UPDATE_FREQ, 0);
-		if (freqIndex < 0) freqIndex = 0;
+		int updateFreq = Integer.parseInt(prefs.getString(UserPreferences.PREF_UPDATE_FREQ, "0"));
+		if (updateFreq < 0) updateFreq = 0;
 		
 		boolean autoUpdate = prefs.getBoolean(UserPreferences.PREF_AUTO_UPDATE, false);
-		
-		Resources r = getResources();
-		int[] minMagValues = r.getIntArray(R.array.magnitude_values);
-		int[] freqValues = r.getIntArray(R.array.update_freq_values);
-		
-		minimumMagnitude = minMagValues[minMagIndex];
-		int updateFreq = freqValues[freqIndex];
-		
+						
 		if (autoUpdate) {
 			int alarmType = AlarmManager.ELAPSED_REALTIME_WAKEUP;
 			long timeToRefresh = SystemClock.elapsedRealtime() + updateFreq*60*1000;
