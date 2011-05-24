@@ -10,9 +10,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -51,6 +48,7 @@ public class SeismicService extends Service {
 	public static final int NOTIFICATION_ID = 1;
 	
 	public static final String NEW_EARTHQUAKE_FOUND = "New_Earthquake_Found";
+	public static String QUAKES_REFRESHED = "uk.co.kalgan.QUAKES_REFRESHED";
 	
 	@Override
 	public int onStartCommand(Intent _intent, int _flags, int _startId) {
@@ -257,6 +255,7 @@ public class SeismicService extends Service {
 		
 		@Override
 		protected void onPostExecute(Void _result) {
+			sendBroadcast(new Intent(QUAKES_REFRESHED));
 			stopSelf();
 		}
 	}

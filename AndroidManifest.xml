@@ -28,5 +28,18 @@
        			<action android:name="uk.co.kalgan.seismic.ACTION_REFRESH_EARTHQUAKE_ALARM" />
        		</intent-filter>
        	</receiver>
+       	<receiver android:name=".SeismicWidget"
+       			  android:label="Last Earthquake">
+       		<intent-filter>
+       			<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+       		</intent-filter>
+       		<intent-filter>
+       			<action android:name="uk.co.kalgan.QUAKES_REFRESHED" />
+       		</intent-filter>
+       		<meta-data
+       			android:name="android.appwidget.provider"
+       			android:resource="@xml/seismic_widget_info"
+       		/>
+       	</receiver>
     </application>
 </manifest>
