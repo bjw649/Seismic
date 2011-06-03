@@ -19,6 +19,12 @@
         		  android:label="View Eathquakes" />
         <activity android:name=".UserPreferences"
         		  android:label="Seismic Preferences" />
+	  	<activity android:name=".SeismicLiveFolders$SeismicLiveFolder"
+	  			  android:label="All Earthquakes">
+	  		<intent-filter>
+	  			<action android:name="android.intent.action.CREATE_LIVE_FOLDER" />
+	  		</intent-filter>
+	  	</activity>
         <provider android:name=".SeismicProvider"
                   android:authorities="uk.co.kalgan.provider.seismic" />
         <service  android:name=".SeismicService"
