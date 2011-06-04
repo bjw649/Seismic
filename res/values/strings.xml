@@ -8,4 +8,6 @@
     <string name="menu_preferences">Preferences</string>
     <string name="menu_earthquake_map">Earthquake Map</string>
     <string name="menu_update">Refresh Earthquakes</string>
+    <string name="search_label">Earthquakes</string>
+    <string name="search_description">Earthquake locations</string>
 </resources>

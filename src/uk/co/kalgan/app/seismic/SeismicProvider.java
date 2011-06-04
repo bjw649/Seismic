@@ -2,6 +2,7 @@ package uk.co.kalgan.app.seismic;
 
 import java.util.HashMap;
 
+import android.app.SearchManager;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -22,20 +23,28 @@ public class SeismicProvider extends ContentProvider {
 
 	public static final Uri CONTENT_URI = Uri.parse("content://uk.co.kalgan.provider.seismic/earthquakes");
 	public static final Uri LIVE_FOLDER_URI = Uri.parse("content://uk.co.kalgan.provider.seismic/live_folder");
+	public static final Uri SEARCH_URI = Uri.parse("content://uk.co.kalgan.provider.seismic/" + SearchManager.SUGGEST_URI_PATH_QUERY);
 	
 	// Create constants to differentiate between different URI requests
 	private static final int QUAKES = 1;
 	private static final int QUAKE_ID = 2;
 	private static final int LIVE_FOLDER = 3;
+	private static final int SEARCH = 4;
 	
 	private static final UriMatcher uriMatcher;
 	// Allocate UriMatcher with trailing 'earthquakes' for all quakes and
 	// a trailing 'earthquakes/[rowID]' for just one 
+	private static final String auth = "uk.co.kalgan.provider.seismic";
 	static {
 		uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-		uriMatcher.addURI("uk.co.kalgan.provider.seismic", "earthquakes", QUAKES);
-		uriMatcher.addURI("uk.co.kalgan.provider.seismic", "earthquakes/#", QUAKE_ID);
-		uriMatcher.addURI("uk.co.kalgan.provider.seismic", "live_folder", LIVE_FOLDER);
+		uriMatcher.addURI(auth, "earthquakes", QUAKES);
+		uriMatcher.addURI(auth, "earthquakes/#", QUAKE_ID);
+		uriMatcher.addURI(auth, "live_folder", LIVE_FOLDER);
+		
+		uriMatcher.addURI(auth, SearchManager.SUGGEST_URI_PATH_QUERY, SEARCH);
+		uriMatcher.addURI(auth, SearchManager.SUGGEST_URI_PATH_QUERY + "/*", SEARCH);
+		uriMatcher.addURI(auth, SearchManager.SUGGEST_URI_PATH_SHORTCUT, SEARCH);
+		uriMatcher.addURI(auth, SearchManager.SUGGEST_URI_PATH_SHORTCUT + "/*", SEARCH);
 	}
 	
 	private SQLiteDatabase earthquakeDB;
@@ -108,6 +117,7 @@ public class SeismicProvider extends ContentProvider {
 		switch ( uriMatcher.match(_uri)) {
 		case QUAKES|LIVE_FOLDER: return "vnd.android.cursor.dir/vnd.kalgan.earthquake";
 		case QUAKE_ID: return "vnd.android.cursor.item/vnd.kalgan.earthquake";
+		case SEARCH: return SearchManager.SUGGEST_MIME_TYPE;
 		default: throw new IllegalArgumentException("Unsupported URI: " + _uri);
 		}
 	}
@@ -160,6 +170,14 @@ public class SeismicProvider extends ContentProvider {
 				KEY_MAGNITUDE + " AS " + LiveFolders.DESCRIPTION);
 	}
 	
+	static final HashMap<String, String> SEARCH_PROJECTION_MAP;
+	static {
+		SEARCH_PROJECTION_MAP = new HashMap<String, String>();
+		SEARCH_PROJECTION_MAP.put(SearchManager.SUGGEST_COLUMN_TEXT_1,
+				KEY_DETAILS + " AS " + SearchManager.SUGGEST_COLUMN_TEXT_1);
+		SEARCH_PROJECTION_MAP.put("_id", KEY_ID + " AS " + "_id");
+	}
+	
 	@Override
 	public Cursor query(Uri _uri, String[] _projection, String _selection,
 			String[] _selectionArgs, String _sortOrder) {
@@ -174,6 +192,11 @@ public class SeismicProvider extends ContentProvider {
 			break;
 		case LIVE_FOLDER :
 			qb.setProjectionMap(LIVE_FOLDER_PROJECTION);
+			break;
+		case SEARCH:
+			qb.appendWhere(KEY_DETAILS + " LIKE \"%" +
+					_uri.getPathSegments().get(1) + "%\"");
+			qb.setProjectionMap(SEARCH_PROJECTION_MAP);
 			break;
 		
 		default:break;

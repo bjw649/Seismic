@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<searchable
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:label="@string/app_name"
+  android:searchSettingsDescription="@string/app_name"
+  android:includeInGlobalSearch="true"
+  android:searchSuggestAuthority="uk.co.kalgan.provider.seismic"
+  android:searchSuggestIntentAction="android.intent.action.VIEW">
+</searchable>
